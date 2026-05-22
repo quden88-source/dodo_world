@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>롯데하이마트 심층 분석 대시보드 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --lotte: #E31837;
+  --lotte-dark: #9B0F24;
+  --lotte-glow: rgba(227,24,55,0.25);
+  --himart: #1A4FA0;
+  --himart-light: #5B8DDB;
+  --bg: #0C0E14;
+  --surface: #13151E;
+  --surface2: #1C1F2E;
+  --surface3: #232740;
+  --border: rgba(255,255,255,0.07);
+  --text: #E4E7F0;
+  --text-muted: #7A82A0;
+  --green: #00C87A;
+  --red: #FF3D5A;
+  --yellow: #FFB830;
+  --purple: #9B6DFF;
+  --cyan: #00D4FF;
+  --radius: 16px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+@keyframes hblink {
+  0%,100% { box-shadow: 0 0 16px rgba(227,24,55,.4); }
+  50%      { box-shadow: 0 0 28px rgba(227,24,55,.8); }
+}
+body {
+  font-family: 'Apple SD Gothic Neo','Noto Sans KR',-apple-system,sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── HEADER ── */
+.header {
+  background: linear-gradient(135deg, #0C0E14 0%, #13151E 60%, #1A1020 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 0 40px;
+  position: sticky; top: 0; z-index: 200;
+  backdrop-filter: blur(16px);
+}
+.header-inner {
+  max-width: 1440px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 64px;
+}
+.header-brand { display: flex; align-items: center; gap: 14px; }
+.header-logo {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--lotte);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 900; color: #fff;
+  box-shadow: 0 0 16px var(--lotte-glow);
+}
+.header-title { font-size: 17px; font-weight: 800; letter-spacing: -0.4px; }
+.header-title span { color: var(--lotte); }
+.header-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.header-badge {
+  display: flex; gap: 8px; align-items: center;
+}
+.badge {
+  padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;
+  border: 1px solid;
+}
+.badge-red   { background: rgba(227,24,55,0.12); color: var(--lotte); border-color: rgba(227,24,55,0.3); }
+.badge-gray  { background: var(--surface2); color: var(--text-muted); border-color: var(--border); }
+.badge-green { background: rgba(0,200,122,0.12); color: var(--green); border-color: rgba(0,200,122,0.25); }
+
+/* ── LAYOUT ── */
+.container { max-width: 1440px; margin: 0 auto; padding: 32px 40px; }
+
+/* ── HERO KPI ── */
+.hero-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px; margin-bottom: 28px;
+}
+.kpi {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px 20px;
+  position: relative; overflow: hidden;
+  transition: transform .2s, box-shadow .2s;
+}
+.kpi:hover { transform: translateY(-3px); box-shadow: 0 16px 40px rgba(0,0,0,.5); }
+.kpi-accent {
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: var(--lotte);
+}
+.kpi-accent.green  { background: var(--green); }
+.kpi-accent.yellow { background: var(--yellow); }
+.kpi-accent.red2   { background: var(--red); }
+.kpi-accent.blue   { background: var(--himart-light); }
+.kpi-label { font-size: 10px; color: var(--text-muted); font-weight: 600;
+  text-transform: uppercase; letter-spacing: .7px; margin-bottom: 10px; }
+.kpi-val { font-size: 26px; font-weight: 800; letter-spacing: -1px; line-height: 1; }
+.kpi-sub { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+.kpi-delta {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 700; margin-top: 8px;
+  padding: 2px 8px; border-radius: 6px;
+}
+.delta-up   { background: rgba(0,200,122,.12); color: var(--green); }
+.delta-down { background: rgba(255,61,90,.12); color: var(--red); }
+.delta-warn { background: rgba(255,184,48,.12); color: var(--yellow); }
+
+/* ── TABS ── */
+.tabs-wrap { margin-bottom: 24px; }
+.tabs { display: flex; gap: 4px; }
+.tab {
+  padding: 9px 22px; border-radius: 10px; font-size: 13px; font-weight: 600;
+  border: 1px solid var(--border); background: var(--surface);
+  color: var(--text-muted); cursor: pointer; transition: all .2s;
+}
+.tab:hover { color: var(--text); background: var(--surface2); }
+.tab.active {
+  color: #fff; border-color: rgba(227,24,55,.4);
+  background: rgba(227,24,55,.15);
+  box-shadow: 0 0 12px rgba(227,24,55,.15);
+}
+
+/* ── PANEL ── */
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* ── GRID ── */
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px; }
+.g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; margin-bottom: 18px; }
+.g13 { display: grid; grid-template-columns: 1fr 2fr; gap: 18px; margin-bottom: 18px; }
+.g21 { display: grid; grid-template-columns: 2fr 1fr; gap: 18px; margin-bottom: 18px; }
+.gfull { margin-bottom: 18px; }
+
+/* ── CARD ── */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 24px;
+}
+.card-title {
+  font-size: 12px; font-weight: 700; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: .8px; margin-bottom: 20px;
+  display: flex; align-items: center; gap: 8px;
+}
+.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--lotte); flex-shrink: 0; }
+.dot.green  { background: var(--green); }
+.dot.yellow { background: var(--yellow); }
+.dot.blue   { background: var(--himart-light); }
+
+/* ── CHART ── */
+.ch { position: relative; }
+.ch-260 { height: 260px; }
+.ch-300 { height: 300px; }
+.ch-220 { height: 220px; }
+.ch-180 { height: 180px; }
+
+/* ── ALERT BOX ── */
+.alert {
+  border-radius: 12px; padding: 14px 18px; font-size: 12px;
+  line-height: 1.65; margin-bottom: 14px; border-left: 3px solid;
+}
+.alert-red    { background: rgba(255,61,90,.07); border-color: var(--red); color: #ffb3c0; }
+.alert-green  { background: rgba(0,200,122,.07); border-color: var(--green); color: #a3f5d4; }
+.alert-yellow { background: rgba(255,184,48,.07); border-color: var(--yellow); color: #ffe4a3; }
+.alert-blue   { background: rgba(91,141,219,.07); border-color: var(--himart-light); color: #b3d4ff; }
+.alert strong { font-weight: 700; }
+
+/* ── METRIC ROW ── */
+.metric-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 0; border-bottom: 1px solid var(--border);
+}
+.metric-row:last-child { border: none; }
+.m-label { font-size: 12px; color: var(--text-muted); }
+.m-val   { font-size: 14px; font-weight: 700; }
+.m-delta { font-size: 11px; }
+
+/* ── STORE BAR ── */
+.store-bar-wrap { display: flex; flex-direction: column; gap: 14px; }
+.store-item {}
+.s-label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; }
+.s-label .year { color: var(--text-muted); }
+.s-label .num  { font-weight: 700; }
+.s-bar { height: 12px; background: var(--surface3); border-radius: 99px; overflow: hidden; }
+.s-fill { height: 100%; border-radius: 99px; transition: width 1.2s cubic-bezier(.4,0,.2,1); }
+
+/* ── SWOT ── */
+.swot-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr; gap: 12px;
+}
+.swot-cell {
+  border-radius: 12px; padding: 18px; border: 1px solid;
+}
+.swot-cell.s { background: rgba(0,200,122,.06); border-color: rgba(0,200,122,.2); }
+.swot-cell.w { background: rgba(255,61,90,.06); border-color: rgba(255,61,90,.2); }
+.swot-cell.o { background: rgba(91,141,219,.06); border-color: rgba(91,141,219,.2); }
+.swot-cell.t { background: rgba(255,184,48,.06); border-color: rgba(255,184,48,.2); }
+.swot-header {
+  font-size: 11px; font-weight: 800; letter-spacing: 1px;
+  text-transform: uppercase; margin-bottom: 12px;
+}
+.swot-cell.s .swot-header { color: var(--green); }
+.swot-cell.w .swot-header { color: var(--red); }
+.swot-cell.o .swot-header { color: var(--himart-light); }
+.swot-cell.t .swot-header { color: var(--yellow); }
+.swot-item {
+  font-size: 12px; color: var(--text-muted); padding: 4px 0;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+  line-height: 1.5;
+}
+.swot-item:last-child { border: none; }
+.swot-icon { margin-right: 6px; }
+
+/* ── STRATEGY CARD ── */
+.strategy-list { display: flex; flex-direction: column; gap: 14px; }
+.strat-card {
+  border-radius: 12px; padding: 18px 20px;
+  background: var(--surface2); border: 1px solid var(--border);
+  display: flex; gap: 16px; align-items: flex-start;
+  transition: transform .15s;
+}
+.strat-card:hover { transform: translateX(4px); }
+.strat-num {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 900; flex-shrink: 0;
+}
+.strat-body { flex: 1; }
+.strat-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+.strat-desc { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+.strat-stars { display: flex; gap: 2px; margin-top: 8px; }
+.star { font-size: 13px; }
+.star.on  { color: var(--yellow); }
+.star.off { color: var(--surface3); }
+.strat-tag {
+  display: inline-block; font-size: 10px; font-weight: 700;
+  padding: 2px 8px; border-radius: 6px; margin-top: 6px;
+}
+
+/* ── SCENARIO ── */
+.scen-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+.scen {
+  border-radius: 12px; padding: 20px; border: 1px solid;
+}
+.scen.bull  { background: rgba(0,200,122,.06); border-color: rgba(0,200,122,.2); }
+.scen.base  { background: rgba(91,141,219,.06); border-color: rgba(91,141,219,.2); }
+.scen.bear  { background: rgba(255,61,90,.06); border-color: rgba(255,61,90,.2); }
+.scen-label { font-size: 11px; font-weight: 800; letter-spacing: 1px; margin-bottom: 8px; }
+.scen.bull .scen-label  { color: var(--green); }
+.scen.base .scen-label  { color: var(--himart-light); }
+.scen.bear .scen-label  { color: var(--red); }
+.scen-prob {
+  font-size: 11px; font-weight: 700; margin-bottom: 12px;
+  padding: 3px 10px; border-radius: 20px; display: inline-block;
+}
+.scen.bull .scen-prob  { background: rgba(0,200,122,.15); color: var(--green); }
+.scen.base .scen-prob  { background: rgba(91,141,219,.15); color: var(--himart-light); }
+.scen.bear .scen-prob  { background: rgba(255,61,90,.15); color: var(--red); }
+.scen-val { font-size: 28px; font-weight: 800; letter-spacing: -1px; margin-bottom: 4px; }
+.scen-sub { font-size: 11px; color: var(--text-muted); margin-bottom: 12px; }
+.scen-desc { font-size: 11px; color: var(--text-muted); line-height: 1.6; }
+
+/* ── TIMELINE ── */
+.timeline { display: flex; flex-direction: column; }
+.tl { display: flex; gap: 14px; padding-bottom: 18px; position: relative; }
+.tl:last-child { padding-bottom: 0; }
+.tl-spine { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; width: 14px; }
+.tl-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--lotte); margin-top: 3px; flex-shrink: 0; box-shadow: 0 0 8px var(--lotte-glow); }
+.tl-dot.dim { background: var(--surface3); box-shadow: none; }
+.tl-line { width: 1px; background: var(--border); flex: 1; margin-top: 4px; }
+.tl:last-child .tl-line { display: none; }
+.tl-body { padding-bottom: 2px; }
+.tl-date { font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 2px; }
+.tl-title { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+.tl-desc { font-size: 11px; color: var(--text-muted); line-height: 1.55; }
+
+/* ── RISK TABLE ── */
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th {
+  padding: 10px 14px; text-align: left; font-size: 10px; font-weight: 700;
+  color: var(--text-muted); text-transform: uppercase; letter-spacing: .6px;
+  border-bottom: 1px solid var(--border);
+}
+td { padding: 11px 14px; border-bottom: 1px solid rgba(255,255,255,.04); }
+tr:last-child td { border: none; }
+tr:hover td { background: rgba(255,255,255,.02); }
+.rb {
+  display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 10px; font-weight: 700;
+}
+.rb-h { background: rgba(255,61,90,.15); color: var(--red); }
+.rb-m { background: rgba(255,184,48,.15); color: var(--yellow); }
+.rb-l { background: rgba(0,200,122,.12); color: var(--green); }
+
+/* ── VERDICT BOX ── */
+.verdict {
+  background: linear-gradient(135deg, rgba(227,24,55,.08) 0%, rgba(26,79,160,.08) 100%);
+  border: 1px solid rgba(227,24,55,.2); border-radius: var(--radius);
+  padding: 28px 32px; margin-bottom: 18px;
+}
+.verdict-title {
+  font-size: 16px; font-weight: 800; color: var(--lotte);
+  margin-bottom: 12px; letter-spacing: -.3px;
+}
+.verdict-body { font-size: 13px; color: var(--text); line-height: 1.8; }
+.verdict-body strong { color: var(--yellow); }
+
+/* ── COMPARE (Best Buy) ── */
+.compare-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.compare-card {
+  border-radius: 12px; padding: 20px; border: 1px solid var(--border);
+  background: var(--surface2);
+}
+.compare-brand { font-size: 13px; font-weight: 800; margin-bottom: 12px; }
+.compare-item {
+  display: flex; gap: 8px; font-size: 12px; color: var(--text-muted);
+  padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,.04);
+  line-height: 1.5;
+}
+.compare-item:last-child { border: none; }
+.ci-icon { flex-shrink: 0; }
+
+/* ── FOOTER ── */
+.footer {
+  border-top: 1px solid var(--border);
+  max-width: 1440px; margin: 0 auto;
+  padding: 22px 40px; font-size: 11px; color: var(--text-muted); line-height: 1.7;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 960px) {
+  .container, .header { padding-left: 20px; padding-right: 20px; }
+  .hero-grid { grid-template-columns: repeat(2,1fr); }
+  .g2, .g3, .g13, .g21, .scen-grid, .swot-grid, .compare-wrap { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-inner">
+    <div class="header-brand">
+      <div class="header-logo">H</div>
+      <div>
+        <div class="header-title">롯데하이마트 <span>(071840)</span> 심층 분석</div>
+        <div class="header-meta">전환점의 기로 — 반등의 싹인가, 구조적 쇠퇴의 숨 고르기인가</div>
+      </div>
+    </div>
+    <div class="header-badge">
+      <div class="badge badge-red">가전 유통 1위</div>
+      <div class="badge badge-green">브랜드평판 1위</div>
+      <div class="badge badge-gray">기준일: 2026.05.22</div>
+      <a href="하이마트_탈출진단.html" style="
+        display:inline-flex;align-items:center;gap:6px;
+        background:linear-gradient(135deg,#E31837,#FF6B35);
+        color:#fff;font-size:12px;font-weight:800;
+        padding:6px 16px;border-radius:99px;text-decoration:none;
+        box-shadow:0 0 16px rgba(227,24,55,.4);
+        animation:hblink 2s ease-in-out infinite;
+        letter-spacing:-.2px;
+      ">🚨 탈출 진단하기</a>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- HERO KPI -->
+  <div class="hero-grid">
+    <div class="kpi">
+      <div class="kpi-accent"></div>
+      <div class="kpi-label">2018년 최고 매출</div>
+      <div class="kpi-val" style="color:var(--lotte)">4.1<span style="font-size:16px">조</span></div>
+      <div class="kpi-sub">역대 정점</div>
+      <div class="kpi-delta delta-warn">▼ 현재 대비 -42%</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-accent red2"></div>
+      <div class="kpi-label">현재 매출 (2025)</div>
+      <div class="kpi-val" style="color:var(--red)">~2.4<span style="font-size:16px">조</span></div>
+      <div class="kpi-sub">정점 대비 절반 이하</div>
+      <div class="kpi-delta delta-up">▲ 영업이익 96억 흑자</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-accent yellow"></div>
+      <div class="kpi-label">2026 1Q 실적</div>
+      <div class="kpi-val" style="color:var(--yellow)">적자<span style="font-size:14px">확대</span></div>
+      <div class="kpi-sub">부동산 침체 직격탄</div>
+      <div class="kpi-delta delta-down">▼ 전분기 대비 악화</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-accent green"></div>
+      <div class="kpi-label">PLUX 매출 목표</div>
+      <div class="kpi-val" style="color:var(--green)">2,000<span style="font-size:14px">억</span></div>
+      <div class="kpi-sub">2025년 1,300억 → 2026E</div>
+      <div class="kpi-delta delta-up">▲ 1Q26 +26% YoY</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-accent blue"></div>
+      <div class="kpi-label">현재 점포 수</div>
+      <div class="kpi-val" style="color:var(--himart-light)">310<span style="font-size:14px">개</span></div>
+      <div class="kpi-sub">2019년 466개 대비</div>
+      <div class="kpi-delta delta-down">▼ -33% (156개 순감)</div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs-wrap">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('performance',this)">실적 분석</button>
+      <button class="tab" onclick="switchTab('strategy',this)">4대 전략</button>
+      <button class="tab" onclick="switchTab('competition',this)">경쟁 환경</button>
+      <button class="tab" onclick="switchTab('outlook',this)">전망 &amp; 시나리오</button>
+    </div>
+  </div>
+
+  <!-- ════════════ PANEL: PERFORMANCE ════════════ -->
+  <div class="panel active" id="panel-performance">
+
+    <div class="g2">
+      <!-- 매출 추이 -->
+      <div class="card">
+        <div class="card-title"><div class="dot"></div>연간 매출 추이 (조원)</div>
+        <div class="ch ch-300"><canvas id="ch-revenue"></canvas></div>
+      </div>
+      <!-- 영업이익 추이 -->
+      <div class="card">
+        <div class="card-title"><div class="dot"></div>영업이익 추이 (억원)</div>
+        <div class="ch ch-300"><canvas id="ch-profit"></canvas></div>
+      </div>
+    </div>
+
+    <div class="g21">
+      <!-- 점포 수 감소 -->
+      <div class="card">
+        <div class="card-title"><div class="dot yellow"></div>점포 수 변화 (개)</div>
+        <div class="ch ch-260"><canvas id="ch-stores"></canvas></div>
+      </div>
+      <!-- 핵심 지표 -->
+      <div class="card">
+        <div class="card-title"><div class="dot green"></div>핵심 지표</div>
+        <div class="metric-row">
+          <div class="m-label">2018 매출 (정점)</div>
+          <div><div class="m-val">4조 1,127억</div><div class="m-delta" style="color:var(--lotte)">역대 최고</div></div>
+        </div>
+        <div class="metric-row">
+          <div class="m-label">2025 매출</div>
+          <div><div class="m-val">~2조 4,000억</div><div class="m-delta" style="color:var(--green)">소폭 회복</div></div>
+        </div>
+        <div class="metric-row">
+          <div class="m-label">2025 영업이익</div>
+          <div><div class="m-val">96억원</div><div class="m-delta" style="color:var(--green)">+460% YoY</div></div>
+        </div>
+        <div class="metric-row">
+          <div class="m-label">2026 1Q</div>
+          <div><div class="m-val">적자 확대</div><div class="m-delta" style="color:var(--red)">부동산 침체</div></div>
+        </div>
+        <div class="metric-row">
+          <div class="m-label">정점 대비 매출 감소</div>
+          <div><div class="m-val">-42%</div><div class="m-delta" style="color:var(--red)">-1.7조원 소멸</div></div>
+        </div>
+        <div class="metric-row">
+          <div class="m-label">점포 감소 (2019→2026)</div>
+          <div><div class="m-val">-156개</div><div class="m-delta" style="color:var(--yellow)">연평균 31개 폐점</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 점포 바 차트 -->
+    <div class="card gfull">
+      <div class="card-title"><div class="dot blue"></div>연도별 점포 수 변화 상세</div>
+      <div class="store-bar-wrap">
+        <div class="store-item">
+          <div class="s-label"><span class="year">2019 (정점)</span><span class="num">466개</span></div>
+          <div class="s-bar"><div class="s-fill" style="width:0;background:var(--lotte)" data-w="100"></div></div>
+        </div>
+        <div class="store-item">
+          <div class="s-label"><span class="year">2021</span><span class="num">430개</span></div>
+          <div class="s-bar"><div class="s-fill" style="width:0;background:#C0162F" data-w="92.3"></div></div>
+        </div>
+        <div class="store-item">
+          <div class="s-label"><span class="year">2023 말</span><span class="num">336개</span></div>
+          <div class="s-bar"><div class="s-fill" style="width:0;background:var(--yellow)" data-w="72.1"></div></div>
+        </div>
+        <div class="store-item">
+          <div class="s-label"><span class="year">2026 1Q</span><span class="num">314개</span></div>
+          <div class="s-bar"><div class="s-fill" style="width:0;background:var(--himart-light)" data-w="67.4"></div></div>
+        </div>
+        <div class="store-item">
+          <div class="s-label"><span class="year">2026 6월 (현재)</span><span class="num">310개</span></div>
+          <div class="s-bar"><div class="s-fill" style="width:0;background:var(--green)" data-w="66.5"></div></div>
+        </div>
+      </div>
+      <p style="font-size:11px;color:var(--text-muted);margin-top:18px">
+        ※ 바 너비는 2019년 466개 기준 상대 비율. 수익성 낮은 소규모 점포 우선 폐점, 거점형 대형 매장 강화 전략.
+      </p>
+    </div>
+
+    <!-- 위기 원인 -->
+    <div class="g2">
+      <div class="card">
+        <div class="card-title"><div class="dot"></div>위기 원인 기여도 분석</div>
+        <div class="ch ch-260"><canvas id="ch-crisis"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><div class="dot yellow"></div>온라인 가전 구매 비중 추이</div>
+        <div class="ch ch-260"><canvas id="ch-online"></canvas></div>
+      </div>
+    </div>
+
+  </div><!-- /panel-performance -->
+
+  <!-- ════════════ PANEL: STRATEGY ════════════ -->
+  <div class="panel" id="panel-strategy">
+
+    <div class="g2">
+      <!-- 4대 전략 카드 -->
+      <div class="card">
+        <div class="card-title"><div class="dot"></div>4대 핵심 전략 평가</div>
+        <div class="strategy-list">
+          <div class="strat-card">
+            <div class="strat-num" style="background:rgba(0,200,122,.15);color:var(--green)">01</div>
+            <div class="strat-body">
+              <div class="strat-title">고객 평생 케어 (Care)</div>
+              <div class="strat-desc">설치·수리·관리·교체 생애주기 서비스. 가전 구독 모델 확대. 온라인이 대체하기 가장 어려운 영역.</div>
+              <div class="strat-stars">
+                <span class="star on">★</span><span class="star on">★</span>
+                <span class="star on">★</span><span class="star on">★</span>
+                <span class="star off">★</span>
+              </div>
+              <span class="strat-tag" style="background:rgba(0,200,122,.15);color:var(--green)">가장 유망</span>
+            </div>
+          </div>
+          <div class="strat-card">
+            <div class="strat-num" style="background:rgba(255,184,48,.15);color:var(--yellow)">02</div>
+            <div class="strat-body">
+              <div class="strat-title">PB 브랜드 PLUX</div>
+              <div class="strat-desc">1~2인 가구 타겟 자체 브랜드. 냉장고 1위, 1Q26 +26% 성장. 7월 단독 매장 오픈 예정.</div>
+              <div class="strat-stars">
+                <span class="star on">★</span><span class="star on">★</span>
+                <span class="star on">★</span><span class="star on">★</span>
+                <span class="star off">★</span>
+              </div>
+              <span class="strat-tag" style="background:rgba(255,184,48,.15);color:var(--yellow)">실적 검증 중</span>
+            </div>
+          </div>
+          <div class="strat-card">
+            <div class="strat-num" style="background:rgba(91,141,219,.15);color:var(--himart-light)">03</div>
+            <div class="strat-body">
+              <div class="strat-title">스토어 뉴 포맷 (경험형)</div>
+              <div class="strat-desc">체험·라이프스타일 제안 매장. 잠실점 리뉴얼. 76개 리뉴얼 점포 +4% 매출 상승.</div>
+              <div class="strat-stars">
+                <span class="star on">★</span><span class="star on">★</span>
+                <span class="star on">★</span><span class="star off">★</span>
+                <span class="star off">★</span>
+              </div>
+              <span class="strat-tag" style="background:rgba(91,141,219,.15);color:var(--himart-light)">ROI 검증 필요</span>
+            </div>
+          </div>
+          <div class="strat-card">
+            <div class="strat-num" style="background:rgba(155,109,255,.15);color:var(--purple)">04</div>
+            <div class="strat-body">
+              <div class="strat-title">가전 전문 이커머스</div>
+              <div class="strat-desc">AI 쇼핑 에이전트 '하비' 도입. 대화형 가전 추천. 쿠팡·네이버 앞에서 독자 생존은 난관.</div>
+              <div class="strat-stars">
+                <span class="star on">★</span><span class="star on">★</span>
+                <span class="star off">★</span><span class="star off">★</span>
+                <span class="star off">★</span>
+              </div>
+              <span class="strat-tag" style="background:rgba(155,109,255,.15);color:var(--purple)">가장 어려운 전략</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 전략 레이더 + PLUX 성장 -->
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <div class="card">
+          <div class="card-title"><div class="dot green"></div>4대 전략 가시성 평가 (레이더)</div>
+          <div class="ch ch-220"><canvas id="ch-radar"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><div class="dot yellow"></div>PLUX 매출 성장 추이</div>
+          <div class="ch ch-180"><canvas id="ch-plux"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PLUX 상세 + 케어 타임라인 -->
+    <div class="g2">
+      <div class="card">
+        <div class="card-title"><div class="dot yellow"></div>PLUX 브랜드 성과 상세</div>
+        <div class="metric-row">
+          <div class="m-label">론칭 시점</div>
+          <div><div class="m-val">2024년</div></div>
+        </div>
+        <div class="metric-row">
+          <div class="m-label">1주년 매출 성장률</div>
+          <div><div class="m-val">+15% YoY</div><div class="m-delta" style="color:var(--green)">시장 검증 완료</div></div>
+        </div>
+        <div class="metric-row">
+          <div class="m-label">1Q 2026 성장률</div>
+          <div><div class="m-val">+26% YoY</div><div class="m-delta" style="color:var(--green)">가속화 중</div></div>
+        </div>
+        <div class="metric-row">
+          <div class="m-label">245L 냉장고 판매량</div>
+          <div><div class="m-val">4만대 (1년)</div><div class="m-delta" style="color:var(--yellow)">냉장고 카테고리 1위</div></div>
+        </div>
+        <div class="metric-row">
+          <div class="m-label">2025 매출</div>
+          <div><div class="m-val">1,300억원</div></div>
+        </div>
+        <div class="metric-row">
+          <div class="m-label">2026E 목표 매출</div>
+          <div><div class="m-val">2,000억원+</div><div class="m-delta" style="color:var(--green)">+54% 목표</div></div>
+        </div>
+        <div class="metric-row">
+          <div class="m-label">상품 수</div>
+          <div><div class="m-val">약 300개</div><div class="m-delta" style="color:var(--text-muted)">대형·주방·생활·IT 가전</div></div>
+        </div>
+        <div class="metric-row">
+          <div class="m-label">단독 매장 오픈</div>
+          <div><div class="m-val">2026년 7월 예정</div><div class="m-delta" style="color:var(--yellow)">브랜드 독립 시험대</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><div class="dot green"></div>케어서비스 로드맵</div>
+        <div class="timeline">
+          <div class="tl">
+            <div class="tl-spine"><div class="tl-dot"></div><div class="tl-line"></div></div>
+            <div class="tl-body">
+              <div class="tl-date">2025년</div>
+              <div class="tl-title">가전 구독 서비스 론칭</div>
+              <div class="tl-desc">PLUX 세탁기·에어컨·밥솥 구독 적용. '하이마트 구독' 브랜드 공식 출범.</div>
+            </div>
+          </div>
+          <div class="tl">
+            <div class="tl-spine"><div class="tl-dot"></div><div class="tl-line"></div></div>
+            <div class="tl-body">
+              <div class="tl-date">2026년 3월</div>
+              <div class="tl-title">PLUX 구독 품목 확대</div>
+              <div class="tl-desc">세탁기·에어컨·밥솥에 이어 정수기 구독 추가 (6월 적용).</div>
+            </div>
+          </div>
+          <div class="tl">
+            <div class="tl-spine"><div class="tl-dot"></div><div class="tl-line"></div></div>
+            <div class="tl-body">
+              <div class="tl-date">2026년 7월</div>
+              <div class="tl-title">PLUX 단독 매장 오픈</div>
+              <div class="tl-desc">약 300개 상품 총망라. 브랜드 독립성 시험대. 흥행 여부가 중기 전략 분기점.</div>
+            </div>
+          </div>
+          <div class="tl">
+            <div class="tl-spine"><div class="tl-dot dim"></div><div class="tl-line"></div></div>
+            <div class="tl-body">
+              <div class="tl-date">2026년 하반기 (계획)</div>
+              <div class="tl-title">AI 에이전트 '하비' 고도화</div>
+              <div class="tl-desc">PB·인증 중고·홈서비스 개인별 맞춤 추천. 이커머스 O2O 연계 강화.</div>
+            </div>
+          </div>
+          <div class="tl">
+            <div class="tl-spine"><div class="tl-dot dim"></div></div>
+            <div class="tl-body">
+              <div class="tl-date">2027년+ (전망)</div>
+              <div class="tl-title">케어 가입 100만 달성 목표</div>
+              <div class="tl-desc">서비스 매출 비중 30%+ 달성 시 본격적 비즈니스 모델 전환 완성.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SWOT -->
+    <div class="card gfull">
+      <div class="card-title"><div class="dot"></div>SWOT 분석</div>
+      <div class="swot-grid">
+        <div class="swot-cell s">
+          <div class="swot-header">💪 강점 (Strengths)</div>
+          <div class="swot-item"><span class="swot-icon">▶</span>전자유통점 브랜드평판 1위 (2026년 5월)</div>
+          <div class="swot-item"><span class="swot-icon">▶</span>전국 310개 오프라인 커버리지</div>
+          <div class="swot-item"><span class="swot-icon">▶</span>대형 가전 배송·설치·A/S 전문 인프라</div>
+          <div class="swot-item"><span class="swot-icon">▶</span>수천만 가구 가전 구매 이력 DB</div>
+          <div class="swot-item"><span class="swot-icon">▶</span>롯데그룹 금융·유통 연계 시너지</div>
+        </div>
+        <div class="swot-cell w">
+          <div class="swot-header">⚠ 약점 (Weaknesses)</div>
+          <div class="swot-item"><span class="swot-icon">▶</span>삼성·LG 2사 의존도 70%+ (종속 구조)</div>
+          <div class="swot-item"><span class="swot-icon">▶</span>수백 개 점포 고정 임차료·인건비 부담</div>
+          <div class="swot-item"><span class="swot-icon">▶</span>이커머스 독자 트래픽 부족</div>
+          <div class="swot-item"><span class="swot-icon">▶</span>매출 -42% (2018 대비) 추세</div>
+          <div class="swot-item"><span class="swot-icon">▶</span>PBR 0.3 수준 극심한 저평가</div>
+        </div>
+        <div class="swot-cell o">
+          <div class="swot-header">🚀 기회 (Opportunities)</div>
+          <div class="swot-item"><span class="swot-icon">▶</span>1~2인 가구 급증 → PLUX 소형 가전 수요 확대</div>
+          <div class="swot-item"><span class="swot-icon">▶</span>가전 구독·렌탈 시장 성장 (TAM 5조+)</div>
+          <div class="swot-item"><span class="swot-icon">▶</span>AI 가전 교체 수요 사이클 도래</div>
+          <div class="swot-item"><span class="swot-icon">▶</span>중고 가전 시장 성장 (순환경제 트렌드)</div>
+          <div class="swot-item"><span class="swot-icon">▶</span>온라인 불가 '전문 서비스 공간' 차별화</div>
+        </div>
+        <div class="swot-cell t">
+          <div class="swot-header">🔥 위협 (Threats)</div>
+          <div class="swot-item"><span class="swot-icon">▶</span>부동산 침체 장기화 → 이사·가전 교체 감소</div>
+          <div class="swot-item"><span class="swot-icon">▶</span>쿠팡·네이버 가전 최저가·로켓배송 공세</div>
+          <div class="swot-item"><span class="swot-icon">▶</span>코웨이·SK매직·LG케어솔루션 구독 선점</div>
+          <div class="swot-item"><span class="swot-icon">▶</span>삼성·LG 직판(스토어) 강화로 마진 압박</div>
+          <div class="swot-item"><span class="swot-icon">▶</span>저출생 → 장기 소비 인구 감소</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /panel-strategy -->
+
+  <!-- ════════════ PANEL: COMPETITION ════════════ -->
+  <div class="panel" id="panel-competition">
+
+    <div class="g2">
+      <div class="card">
+        <div class="card-title"><div class="dot"></div>오프라인 가전 유통 브랜드평판 (2026년 5월)</div>
+        <div class="ch ch-260"><canvas id="ch-brand"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><div class="dot yellow"></div>가전 구매 채널 비중 추이</div>
+        <div class="ch ch-260"><canvas id="ch-channel"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card gfull">
+      <div class="card-title"><div class="dot blue"></div>경쟁 구도 맵</div>
+      <div class="g3" style="margin-bottom:0">
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px">오프라인 가전 유통</div>
+          <div class="timeline">
+            <div class="tl">
+              <div class="tl-spine"><div class="tl-dot"></div><div class="tl-line"></div></div>
+              <div class="tl-body">
+                <div class="tl-title" style="color:var(--lotte)">롯데하이마트</div>
+                <div class="tl-desc">310개 점포, 브랜드평판 1위, 종합 가전</div>
+              </div>
+            </div>
+            <div class="tl">
+              <div class="tl-spine"><div class="tl-dot" style="background:var(--himart-light)"></div><div class="tl-line"></div></div>
+              <div class="tl-body">
+                <div class="tl-title" style="color:var(--himart-light)">LG 베스트샵</div>
+                <div class="tl-desc">LG 제품 전문, 전국 400+개, 서비스 강점</div>
+              </div>
+            </div>
+            <div class="tl">
+              <div class="tl-spine"><div class="tl-dot" style="background:#1428A0"></div><div class="tl-line"></div></div>
+              <div class="tl-body">
+                <div class="tl-title" style="color:#6A9EFF">삼성스토어</div>
+                <div class="tl-desc">삼성 직영, 프리미엄 체험 포지션</div>
+              </div>
+            </div>
+            <div class="tl">
+              <div class="tl-spine"><div class="tl-dot dim"></div></div>
+              <div class="tl-body">
+                <div class="tl-title" style="color:var(--text-muted)">전자랜드</div>
+                <div class="tl-desc">400개 이하로 감소, 동반 구조조정 중</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px">온라인 채널 (직접 경쟁)</div>
+          <div class="timeline">
+            <div class="tl">
+              <div class="tl-spine"><div class="tl-dot" style="background:#FF6B35"></div><div class="tl-line"></div></div>
+              <div class="tl-body">
+                <div class="tl-title" style="color:#FF9266">쿠팡</div>
+                <div class="tl-desc">로켓배송·설치. 1Q26 정보유출 3,500억 적자로 일시 약세</div>
+              </div>
+            </div>
+            <div class="tl">
+              <div class="tl-spine"><div class="tl-dot" style="background:var(--green)"></div><div class="tl-line"></div></div>
+              <div class="tl-body">
+                <div class="tl-title" style="color:var(--green)">네이버쇼핑</div>
+                <div class="tl-desc">탈팡족 흡수, AI 추천. 온라인 비중 60.6%</div>
+              </div>
+            </div>
+            <div class="tl">
+              <div class="tl-spine"><div class="tl-dot dim"></div></div>
+              <div class="tl-body">
+                <div class="tl-title" style="color:var(--text-muted)">11번가·G마켓 등</div>
+                <div class="tl-desc">특가·최저가 비교 경쟁</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px">구독·렌탈 (케어 경쟁)</div>
+          <div class="timeline">
+            <div class="tl">
+              <div class="tl-spine"><div class="tl-dot" style="background:var(--cyan)"></div><div class="tl-line"></div></div>
+              <div class="tl-body">
+                <div class="tl-title" style="color:var(--cyan)">코웨이</div>
+                <div class="tl-desc">정수기·공기청정기 구독 절대강자</div>
+              </div>
+            </div>
+            <div class="tl">
+              <div class="tl-spine"><div class="tl-dot" style="background:var(--yellow)"></div><div class="tl-line"></div></div>
+              <div class="tl-body">
+                <div class="tl-title" style="color:var(--yellow)">SK매직</div>
+                <div class="tl-desc">종합 렌탈, 가전 구독 영역 확장 중</div>
+              </div>
+            </div>
+            <div class="tl">
+              <div class="tl-spine"><div class="tl-dot" style="background:#1428A0"></div></div>
+              <div class="tl-body">
+                <div class="tl-title" style="color:#6A9EFF">LG 케어솔루션</div>
+                <div class="tl-desc">제조사 직접 구독, 가장 강력한 위협</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 리스크 테이블 -->
+    <div class="card gfull">
+      <div class="card-title"><div class="dot"></div>경쟁 리스크 분석</div>
+      <table>
+        <thead>
+          <tr><th>리스크</th><th>영향도</th><th>가능성</th><th>세부 내용</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>삼성·LG 직판 채널 강화</td>
+            <td><span class="rb rb-h">높음</span></td>
+            <td><span class="rb rb-h">높음</span></td>
+            <td style="color:var(--text-muted)">매출 70%+ 의존 제조사가 직판 확대 시 마진 구조 붕괴</td>
+          </tr>
+          <tr>
+            <td>부동산 침체 장기화</td>
+            <td><span class="rb rb-h">높음</span></td>
+            <td><span class="rb rb-m">중간</span></td>
+            <td style="color:var(--text-muted)">이사 감소 = 가전 교체 수요 직격탄 (2026년 1Q 재확인)</td>
+          </tr>
+          <tr>
+            <td>쿠팡·네이버 가전 공세</td>
+            <td><span class="rb rb-h">높음</span></td>
+            <td><span class="rb rb-h">높음</span></td>
+            <td style="color:var(--text-muted)">온라인 가전 비중 65%+로 증가, 가격 투명성으로 오프라인 열위</td>
+          </tr>
+          <tr>
+            <td>코웨이·LG케어솔루션 구독 선점</td>
+            <td><span class="rb rb-m">중간</span></td>
+            <td><span class="rb rb-h">높음</span></td>
+            <td style="color:var(--text-muted)">케어서비스 전략의 핵심 경쟁자가 이미 대규모 가입자 보유</td>
+          </tr>
+          <tr>
+            <td>저출생·소비 인구 감소</td>
+            <td><span class="rb rb-m">중간</span></td>
+            <td><span class="rb rb-h">높음</span></td>
+            <td style="color:var(--text-muted)">장기적 가전 수요 기반 자체가 수축</td>
+          </tr>
+          <tr>
+            <td>PLUX 품질 이슈</td>
+            <td><span class="rb rb-h">높음</span></td>
+            <td><span class="rb rb-l">낮음</span></td>
+            <td style="color:var(--text-muted)">제조 파트너 관리 실패 시 브랜드 신뢰도 훼손</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Best Buy 비교 -->
+    <div class="card gfull">
+      <div class="card-title"><div class="dot blue"></div>글로벌 선례: Best Buy (미국) vs 롯데하이마트</div>
+      <div class="compare-wrap">
+        <div class="compare-card">
+          <div class="compare-brand" style="color:#0053A0">📦 Best Buy (미국)</div>
+          <div class="compare-item"><span class="ci-icon">→</span>2013년 "아마존에 죽는다" 사망 선고</div>
+          <div class="compare-item"><span class="ci-icon">→</span>Geek Squad 기술 서비스 구독 모델 도입</div>
+          <div class="compare-item"><span class="ci-icon">→</span>제조사 숍인숍 + 서비스 수익화로 전환</div>
+          <div class="compare-item"><span class="ci-icon">→</span>결과: 살아남아 현재도 북미 1위 가전 유통</div>
+          <div class="compare-item"><span class="ci-icon">→</span>핵심: "판매가 아닌 서비스 기업"으로 정체성 재정의</div>
+        </div>
+        <div class="compare-card">
+          <div class="compare-brand" style="color:var(--lotte)">🏪 롯데하이마트 (한국)</div>
+          <div class="compare-item"><span class="ci-icon">→</span>2022년 창사 첫 영업적자, 생존 위기</div>
+          <div class="compare-item"><span class="ci-icon">→</span>케어서비스·구독 모델 도입 (Best Buy와 유사)</div>
+          <div class="compare-item"><span class="ci-icon">→</span>PLUX PB 브랜드로 제조사 독립 시도</div>
+          <div class="compare-item"><span class="ci-icon">→</span>경험형 매장·AI 이커머스 전환 추진</div>
+          <div class="compare-item"><span class="ci-icon">→</span>핵심 변수: 한국 온라인 전환 속도가 미국보다 빠름</div>
+        </div>
+      </div>
+      <div class="alert alert-blue" style="margin-top:14px;margin-bottom:0">
+        <strong>시사점:</strong> Best Buy는 서비스 수익 비중을 30% 이상으로 끌어올리며 생존에 성공했다. 롯데하이마트도 같은 경로를 걷고 있으나, 한국 소비자의 온라인 전환 속도가 훨씬 빠르다는 점이 변수다. 실행 속도가 생존을 가른다.
+      </div>
+    </div>
+
+  </div><!-- /panel-competition -->
+
+  <!-- ════════════ PANEL: OUTLOOK ════════════ -->
+  <div class="panel" id="panel-outlook">
+
+    <!-- 시나리오 -->
+    <div class="card gfull">
+      <div class="card-title"><div class="dot"></div>2026년 단기 시나리오 분석</div>
+      <div class="scen-grid">
+        <div class="scen bull">
+          <div class="scen-label">▲ BULL (강세)</div>
+          <div class="scen-prob">가능성 20%</div>
+          <div class="scen-val">2조 5,000억</div>
+          <div class="scen-sub">영업이익 200~300억원</div>
+          <div class="scen-desc">부동산 반등 + AI 가전 교체 붐 + PLUX 단독매장 흥행. 하반기 V자 반등.</div>
+        </div>
+        <div class="scen base">
+          <div class="scen-label">● BASE (기본)</div>
+          <div class="scen-prob">가능성 50%</div>
+          <div class="scen-val">2조 2,000~4,000억</div>
+          <div class="scen-sub">영업이익 -50 ~ +50억원</div>
+          <div class="scen-desc">현상 유지. PLUX·케어 성장이 부동산 침체를 부분 상쇄. 손익분기 언저리.</div>
+        </div>
+        <div class="scen bear">
+          <div class="scen-label">▼ BEAR (약세)</div>
+          <div class="scen-prob">가능성 30%</div>
+          <div class="scen-val">2조원 이하</div>
+          <div class="scen-sub">영업손실 -200 ~ -300억원</div>
+          <div class="scen-desc">부동산 침체 장기화 + 소비 위축. 1Q26 적자 추세 연간 지속. 매각설 재부상.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="g2">
+      <div class="card">
+        <div class="card-title"><div class="dot blue"></div>중기 전망 (2027~2028년)</div>
+        <div class="ch ch-260"><canvas id="ch-midterm"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><div class="dot yellow"></div>핵심 변수별 민감도 분석</div>
+        <div class="ch ch-260"><canvas id="ch-sensitivity"></canvas></div>
+      </div>
+    </div>
+
+    <!-- 장기 생존 조건 -->
+    <div class="g2">
+      <div class="card">
+        <div class="card-title"><div class="dot green"></div>장기 생존 3대 조건 (2030년+)</div>
+        <div class="alert alert-green">
+          <strong>조건 1.</strong> 서비스 경제 플레이어로 전환<br>
+          케어·구독·설치 서비스 매출 비중 30%+ 달성. 제품 판매 의존도 탈피.
+        </div>
+        <div class="alert alert-yellow">
+          <strong>조건 2.</strong> PLUX 브랜드 독자 생존력 확보<br>
+          삼성·LG 없이도 PLUX로 고객을 유인. 브랜드 파워 = 제조사 협상력.
+        </div>
+        <div class="alert alert-blue">
+          <strong>조건 3.</strong> 점포의 '목적지화' 완성<br>
+          단순 쇼핑이 아닌 가전 상담·체험·홈스타일링 목적으로 방문하는 공간.
+        </div>
+        <div class="alert alert-red" style="margin-bottom:0">
+          <strong>경고:</strong> 세 조건 중 하나라도 미충족 시 단계적 매각 또는 롯데쇼핑 흡수합병 가능성 증대.
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><div class="dot"></div>투자 관점 분석</div>
+        <div class="metric-row">
+          <div class="m-label">종목 코드</div>
+          <div><div class="m-val">KOSPI 071840</div></div>
+        </div>
+        <div class="metric-row">
+          <div class="m-label">현재 PBR</div>
+          <div><div class="m-val">~0.3배</div><div class="m-delta" style="color:var(--red)">극심한 저평가</div></div>
+        </div>
+        <div class="metric-row">
+          <div class="m-label">롯데그룹 밸류업 목표</div>
+          <div><div class="m-val">주주환원율 35%+</div><div class="m-delta" style="color:var(--yellow)">2026년까지</div></div>
+        </div>
+        <div class="metric-row">
+          <div class="m-label">핵심 투자 포인트</div>
+          <div><div class="m-val" style="font-size:12px">PBR 0.3 안전마진 + PLUX 성장 옵션</div></div>
+        </div>
+        <div class="metric-row">
+          <div class="m-label">권고 전략</div>
+          <div><div class="m-val" style="font-size:12px">실적 확인 후 진입</div></div>
+        </div>
+        <div style="margin-top:16px">
+          <div class="alert alert-yellow" style="margin-bottom:0">
+            <strong>투자 의견:</strong> 현 주가는 청산 가치 수준. 단기 트레이딩보다 2026년 하반기 PLUX 단독매장 흥행 + 부동산 반등 시그널이 동시에 확인된 후 진입이 합리적.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 최종 판결 -->
+    <div class="verdict gfull">
+      <div class="verdict-title">⚖ 최종 종합 의견: "분기점의 기업"</div>
+      <div class="verdict-body">
+        롯데하이마트는 2018년 4조원의 영광에서 현재 2.4조원으로 <strong>매출의 42%가 증발</strong>한 기업이다. 이미 돌이킬 수 없는 과거다. 그러나 <strong>PLUX는 1Q26 +26% 성장</strong>으로 시장 검증을 마쳤고, <strong>케어서비스는 온라인이 대체할 수 없는 유일한 해자</strong>다.
+        <br><br>
+        미국의 Best Buy가 "아마존에 죽는다"는 선고를 받고도 서비스 기업으로 변신해 살아남았듯, 롯데하이마트도 그 경로를 걸을 수 있다. 단, <strong>한국의 온라인 전환 속도는 미국보다 훨씬 빠르다.</strong>
+        <br><br>
+        <strong>2027년까지 케어 가입 100만 + PLUX 3,000억원이 실현되면 제2의 Best Buy로 재탄생.</strong> 실패하면 단계적 매각 또는 흡수합병. 지금 이 순간이 회사 역사를 가를 분기점이다.
+      </div>
+    </div>
+
+  </div><!-- /panel-outlook -->
+
+</div><!-- /container -->
+
+<div class="footer">
+  <p>본 리포트는 공개된 재무 데이터 및 언론 자료를 기반으로 작성된 분석 자료입니다. 투자 권유가 아니며, 예측치는 실제와 다를 수 있습니다.</p>
+  <p style="margin-top:4px">출처: 인사이트코리아, 한국금융신문, 블로터, 전자신문, 뉴스핌, 에너지신문, 뉴데일리, 한국경제 등 · 작성일: 2026년 5월 22일</p>
+</div>
+
+<script>
+// ── DEFAULTS ──
+Chart.defaults.color = '#7A82A0';
+Chart.defaults.font.family = "'Apple SD Gothic Neo','Noto Sans KR',sans-serif";
+Chart.defaults.font.size = 11;
+
+const GRID  = { color: 'rgba(255,255,255,0.05)', drawBorder: false };
+const TICK  = { color: '#7A82A0' };
+const NO_LEGEND = { display: false };
+const LEGEND = {
+  labels: { boxWidth: 10, boxHeight: 10, padding: 14, color: '#7A82A0', font: { size: 11 } }
+};
+
+const C = {
+  lotte: '#E31837', lotteFill: 'rgba(227,24,55,0.12)',
+  himart: '#5B8DDB', himartFill: 'rgba(91,141,219,0.1)',
+  green: '#00C87A', greenFill: 'rgba(0,200,122,0.1)',
+  red: '#FF3D5A', redFill: 'rgba(255,61,90,0.12)',
+  yellow: '#FFB830', yellowFill: 'rgba(255,184,48,0.1)',
+  purple: '#9B6DFF',
+  cyan: '#00D4FF',
+  muted: '#7A82A0',
+  grid: 'rgba(255,255,255,0.05)',
+};
+
+function mk(id, cfg) {
+  const el = document.getElementById(id);
+  if (!el) return null;
+  return new Chart(el, cfg);
+}
+
+// ── TAB ──
+const inited = {};
+function switchTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-' + name).classList.add('active');
+  if (!inited[name]) { inited[name] = true; buildCharts(name); }
+  animateBars();
+}
+
+window.addEventListener('load', () => {
+  inited['performance'] = true;
+  buildCharts('performance');
+  animateBars();
+});
+
+function animateBars() {
+  document.querySelectorAll('.s-fill[data-w]').forEach(el => {
+    el.style.width = el.dataset.w + '%';
+  });
+}
+
+function buildCharts(name) {
+  if (name === 'performance') buildPerformance();
+  if (name === 'strategy')    buildStrategy();
+  if (name === 'competition') buildCompetition();
+  if (name === 'outlook')     buildOutlook();
+}
+
+// ════════ PERFORMANCE ════════
+function buildPerformance() {
+
+  // 매출 추이
+  mk('ch-revenue', {
+    type: 'bar',
+    data: {
+      labels: ['2018','2019','2020','2021','2022','2023','2024','2025','2026E'],
+      datasets: [{
+        label: '매출 (억원)',
+        data: [41127, 40265, 40517, 38697, 33368, 26101, 23567, 24000, 23000],
+        backgroundColor: ctx => {
+          const i = ctx.dataIndex;
+          if (i === 0) return C.lotte;
+          if (i === 8) return 'rgba(227,24,55,0.35)';
+          return 'rgba(227,24,55,0.2)';
+        },
+        borderColor: C.lotte, borderWidth: 1, borderRadius: 6,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: NO_LEGEND,
+        tooltip: { callbacks: { label: ctx => ` ${ctx.raw.toLocaleString()}억원` } },
+        annotation: {}
+      },
+      scales: {
+        x: { grid: GRID, ticks: TICK },
+        y: { grid: GRID, ticks: { ...TICK, callback: v => (v/10000).toFixed(1)+'조' } }
+      }
+    }
+  });
+
+  // 영업이익 추이
+  mk('ch-profit', {
+    type: 'bar',
+    data: {
+      labels: ['2021','2022','2023','2024','2025','2026E'],
+      datasets: [{
+        label: '영업이익 (억원)',
+        data: [1068, -300, -200, 17, 96, -50],
+        backgroundColor: ctx => ctx.raw < 0 ? 'rgba(255,61,90,0.35)' : 'rgba(0,200,122,0.35)',
+        borderColor: ctx => ctx.raw < 0 ? C.red : C.green,
+        borderWidth: 1.5, borderRadius: 7,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: NO_LEGEND,
+        tooltip: { callbacks: { label: ctx => ` ${ctx.raw.toLocaleString()}억원` } }
+      },
+      scales: {
+        x: { grid: GRID, ticks: TICK },
+        y: {
+          grid: GRID, ticks: { ...TICK, callback: v => v.toLocaleString()+'억' },
+          // zero line
+          border: { color: 'rgba(255,255,255,0.15)' }
+        }
+      }
+    }
+  });
+
+  // 점포 수 라인
+  mk('ch-stores', {
+    type: 'line',
+    data: {
+      labels: ['2019','2020','2021','2022','2023','2024','2026 6월'],
+      datasets: [{
+        label: '점포 수',
+        data: [466, 450, 430, 400, 336, 322, 310],
+        borderColor: C.yellow, backgroundColor: C.yellowFill,
+        fill: true, tension: 0.4, pointRadius: 5,
+        pointBackgroundColor: C.yellow,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: NO_LEGEND, tooltip: { callbacks: { label: ctx => ` ${ctx.raw}개` } } },
+      scales: {
+        x: { grid: GRID, ticks: TICK },
+        y: { grid: GRID, ticks: { ...TICK, callback: v => v+'개' }, min: 280, max: 490 }
+      }
+    }
+  });
+
+  // 위기 원인 도넛
+  mk('ch-crisis', {
+    type: 'doughnut',
+    data: {
+      labels: ['온라인 대체','제조사 직판 강화','부동산 경기','소비 트렌드 변화','내부 효율'],
+      datasets: [{
+        data: [35, 25, 20, 15, 5],
+        backgroundColor: [C.lotte, C.himart, C.yellow, C.purple, C.muted],
+        borderColor: '#13151E', borderWidth: 3, hoverOffset: 8,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '65%',
+      plugins: {
+        legend: { position: 'right', labels: { boxWidth: 10, padding: 12, color: C.muted, font: { size: 11 } } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw}%` } }
+      }
+    }
+  });
+
+  // 온라인 가전 비중 추이
+  mk('ch-online', {
+    type: 'line',
+    data: {
+      labels: ['2015','2018','2021','2023','2026'],
+      datasets: [
+        {
+          label: '온라인 가전 구매 비중(%)',
+          data: [35, 45, 55, 62, 65],
+          borderColor: C.himart, backgroundColor: C.himartFill,
+          fill: true, tension: 0.4, pointRadius: 5,
+          pointBackgroundColor: C.himart,
+        },
+        {
+          label: '오프라인 비중(%)',
+          data: [65, 55, 45, 38, 35],
+          borderColor: C.lotte, backgroundColor: C.lotteFill,
+          fill: true, tension: 0.4, pointRadius: 5,
+          pointBackgroundColor: C.lotte,
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: LEGEND },
+      scales: {
+        x: { grid: GRID, ticks: TICK },
+        y: { grid: GRID, ticks: { ...TICK, callback: v => v+'%' }, stacked: false }
+      }
+    }
+  });
+}
+
+// ════════ STRATEGY ════════
+function buildStrategy() {
+
+  // 레이더
+  mk('ch-radar', {
+    type: 'radar',
+    data: {
+      labels: ['기대 수익','실행 난이도\n(낮을수록 좋음)','2026 가시성','차별화','경쟁 방어력'],
+      datasets: [
+        {
+          label: '케어서비스',
+          data: [80, 60, 70, 85, 90],
+          borderColor: C.green, backgroundColor: 'rgba(0,200,122,0.1)',
+          pointBackgroundColor: C.green, pointRadius: 4,
+        },
+        {
+          label: 'PLUX',
+          data: [85, 65, 90, 80, 75],
+          borderColor: C.yellow, backgroundColor: 'rgba(255,184,48,0.1)',
+          pointBackgroundColor: C.yellow, pointRadius: 4,
+        },
+        {
+          label: '경험형 매장',
+          data: [55, 55, 65, 60, 55],
+          borderColor: C.himart, backgroundColor: 'rgba(91,141,219,0.08)',
+          pointBackgroundColor: C.himart, pointRadius: 4,
+        },
+        {
+          label: '이커머스',
+          data: [40, 30, 45, 35, 30],
+          borderColor: C.purple, backgroundColor: 'rgba(155,109,255,0.08)',
+          pointBackgroundColor: C.purple, pointRadius: 4,
+        },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: LEGEND },
+      scales: {
+        r: {
+          grid: { color: 'rgba(255,255,255,0.07)' },
+          angleLines: { color: 'rgba(255,255,255,0.07)' },
+          ticks: { backdropColor: 'transparent', color: C.muted, stepSize: 20 },
+          pointLabels: { color: C.muted, font: { size: 10 } },
+          min: 0, max: 100,
+        }
+      }
+    }
+  });
+
+  // PLUX 성장
+  mk('ch-plux', {
+    type: 'bar',
+    data: {
+      labels: ['2024 (론칭)', '2025 (1주년)', '2026E (목표)'],
+      datasets: [{
+        label: 'PLUX 매출 (억원)',
+        data: [600, 1300, 2000],
+        backgroundColor: ['rgba(255,184,48,0.25)', 'rgba(255,184,48,0.5)', C.yellow],
+        borderColor: C.yellow, borderWidth: 1.5, borderRadius: 8,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: NO_LEGEND,
+        tooltip: { callbacks: { label: ctx => ` ${ctx.raw.toLocaleString()}억원` } }
+      },
+      scales: {
+        x: { grid: GRID, ticks: TICK },
+        y: { grid: GRID, ticks: { ...TICK, callback: v => v.toLocaleString()+'억' } }
+      }
+    }
+  });
+}
+
+// ════════ COMPETITION ════════
+function buildCompetition() {
+
+  // 브랜드 평판
+  mk('ch-brand', {
+    type: 'bar',
+    data: {
+      labels: ['롯데하이마트','LG 베스트샵','전자랜드','삼성스토어'],
+      datasets: [{
+        label: '브랜드 평판 지수 (2026.05)',
+        data: [100, 72, 52, 45],
+        backgroundColor: [C.lotte, C.himart, 'rgba(255,184,48,0.5)', 'rgba(155,109,255,0.5)'],
+        borderColor: [C.lotte, C.himart, C.yellow, C.purple],
+        borderWidth: 1.5, borderRadius: 8,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: NO_LEGEND },
+      scales: {
+        x: { grid: GRID, ticks: TICK, max: 120 },
+        y: { grid: { display: false }, ticks: TICK }
+      }
+    }
+  });
+
+  // 채널 비중
+  mk('ch-channel', {
+    type: 'line',
+    data: {
+      labels: ['2015','2018','2021','2024','2026'],
+      datasets: [
+        {
+          label: '온라인',
+          data: [35, 45, 55, 60, 60.6],
+          borderColor: C.himart, backgroundColor: C.himartFill,
+          fill: true, tension: 0.4, pointRadius: 5,
+          pointBackgroundColor: C.himart,
+        },
+        {
+          label: '오프라인 양판점',
+          data: [40, 32, 25, 22, 20],
+          borderColor: C.lotte, backgroundColor: C.lotteFill,
+          fill: true, tension: 0.4, pointRadius: 5,
+          pointBackgroundColor: C.lotte,
+        },
+        {
+          label: '제조사 직판·기타',
+          data: [25, 23, 20, 18, 19.4],
+          borderColor: C.yellow, backgroundColor: 'transparent',
+          borderDash: [4,4], tension: 0.4, pointRadius: 4,
+          pointBackgroundColor: C.yellow,
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: LEGEND },
+      scales: {
+        x: { grid: GRID, ticks: TICK },
+        y: { grid: GRID, ticks: { ...TICK, callback: v => v+'%' } }
+      }
+    }
+  });
+}
+
+// ════════ OUTLOOK ════════
+function buildOutlook() {
+
+  // 중기 전망
+  mk('ch-midterm', {
+    type: 'bar',
+    data: {
+      labels: ['2025 (실적)','2026E','2027E (낙관)','2027E (기본)','2027E (비관)'],
+      datasets: [
+        {
+          label: '매출 (억원)',
+          data: [24000, 23000, 26000, 24000, 20000],
+          backgroundColor: ['rgba(91,141,219,0.3)','rgba(91,141,219,0.3)',
+            'rgba(0,200,122,0.4)','rgba(91,141,219,0.4)','rgba(255,61,90,0.4)'],
+          borderColor: [C.himart, C.himart, C.green, C.himart, C.red],
+          borderWidth: 1.5, borderRadius: 7, yAxisID: 'y',
+        },
+        {
+          label: '영업이익 (억원)',
+          data: [96, -50, 500, 300, -300],
+          type: 'line',
+          borderColor: C.yellow, backgroundColor: 'transparent',
+          pointBackgroundColor: ctx => ctx.raw >= 0 ? C.green : C.red,
+          pointRadius: 7, tension: 0.3, yAxisID: 'y1',
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: LEGEND },
+      scales: {
+        x: { grid: GRID, ticks: { ...TICK, font: { size: 10 } } },
+        y:  { grid: GRID, ticks: { ...TICK, callback: v => (v/10000).toFixed(1)+'조' }, position: 'left' },
+        y1: { grid: { display: false }, ticks: { ...TICK, callback: v => v+'억' }, position: 'right' }
+      }
+    }
+  });
+
+  // 민감도 분석
+  mk('ch-sensitivity', {
+    type: 'bar',
+    data: {
+      labels: ['부동산 회복','PLUX 흥행','케어 구독 확대','온라인 경쟁 완화','비용 절감'],
+      datasets: [{
+        label: '영업이익 개선 효과 (억원 추정)',
+        data: [400, 300, 250, 150, 100],
+        backgroundColor: [C.lotte, C.yellow, C.green, C.himart, C.purple],
+        borderRadius: 8, borderSkipped: false,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: NO_LEGEND,
+        tooltip: { callbacks: { label: ctx => ` +${ctx.raw}억원 개선 효과` } }
+      },
+      scales: {
+        x: { grid: GRID, ticks: { ...TICK, callback: v => '+'+v+'억' } },
+        y: { grid: { display: false }, ticks: TICK }
+      }
+    }
+  });
+}
+</script>
+</body>
+</html>
